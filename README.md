@@ -72,17 +72,16 @@ Health check with MQTT connection status and statistics:
 - `app_secret_configured`: boolean - Whether `QINGPING_APP_SECRET` is set
 - `replay_protection_enabled`: boolean - Replay attack protection status
 - `timestamp_check_enabled`: boolean - Timestamp validation enabled
+- `timestamp`: Current server time in ISO 8601 format (UTC)
+
+### `GET /metrics`
+Returns:
 - `webhook_stats`: Object with counters:
   - `total_received`: Total webhooks received
   - `signature_valid`: Webhooks with valid signatures
   - `published_success`: Successfully published to MQTT
 - `token_cache_size`: Current replay protection token cache size
 - `timestamp`: Current server time in ISO 8601 format (UTC)
-
-### `GET /metrics`
-Returns:
-- `webhook_stats`: counters for received/validated/published messages
-- `token_cache_size`: current replay protection cache size
 
 ### `POST /qingPing/device/data`
 Webhook endpoint for device data. Validates signature, timestamp, and payload structure.
@@ -126,18 +125,24 @@ The complete original webhook JSON is published, including the `signature` objec
 
 ## Configuration Options
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `QINGPING_APP_SECRET` | *(required)* | Qingping App Secret used for HMAC validation |
-| `MQTT_BROKER` | `localhost` | MQTT broker hostname |
-| `MQTT_PORT` | `1883` | MQTT broker port |
-| `MQTT_CLIENT_ID` | `qingping-webhook` | MQTT client ID. A timestamp is appended automatically to ensure uniqueness. |
-| `MQTT_USERNAME` | *(empty)* | MQTT username |
-| `MQTT_PASSWORD` | *(empty)* | MQTT password |
-| `MQTT_TOPIC_PREFIX` | `qingPing/device` | MQTT topic prefix |
-| `MAX_TIMESTAMP_DRIFT_SECONDS` | `300` | Allowed timestamp drift in seconds (`0` disables check) |
-| `ENABLE_REPLAY_PROTECTION` | `true` | Reject duplicate `token` values |
-| `LOG_LEVEL` | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
+| Variable                | Default         | Description                                                                 |
+|-------------------------|----------------|-----------------------------------------------------------------------------|
+| `QINGPING_APP_SECRET`   | *(required)*   | Qingping App Secret used for HMAC validation                                |
+| `MQTT_BROKER`           | `localhost`    | MQTT broker hostname                                                        |
+| `MQTT_PORT`             | `1883`         | MQTT broker port                                                            |
+| `MQTT_CLIENT_ID`        | `qingping-webhook` | MQTT client ID. A timestamp is appended automatically to ensure uniqueness. |
+| `MQTT_USERNAME`         | *(empty)*      | MQTT username                                                               |
+| `MQTT_PASSWORD`         | *(empty)*      | MQTT password                                                               |
+| `MQTT_TOPIC_PREFIX`     | `qingPing/device` | MQTT topic prefix                                                          |
+| `MAX_TIMESTAMP_DRIFT_SECONDS` | `300`   | Allowed timestamp drift in seconds (`0` disables check)                     |
+| `ENABLE_REPLAY_PROTECTION` | `true`     | Reject duplicate `token` values                                             |
+| `LOG_LEVEL`             | `INFO`         | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)                       |
+| `USER_UID`              | `1001`         | **(Docker only)** Linux user ID for the application process                 |
+| `USER_GID`              | `1001`         | **(Docker only)** Linux group ID for the application process                |
+
+> **Note:**  
+> `USER_UID` and `USER_GID` are used when running the container as a non-root user.  
+> Set these to match your host user's UID/GID if you need to manage file permissions or integrate with host-mounted volumes.
 
 ## Security Features
 
