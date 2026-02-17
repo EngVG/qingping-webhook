@@ -6,7 +6,7 @@
 #        Qingping → Webhook Service → MQTT → Telegraf → InfluxDB
 #
 # author: martin von gunten
-# $Id: main.py 4614 2026-02-17 08:22:43Z m.vgunten $
+# $Id: main.py 4616 2026-02-17 08:33:58Z m.vgunten $
 #
 # (c) 2026 by engineering von gunten / all rights reserved
 
@@ -414,8 +414,8 @@ async def root(request: Request):
     logger.debug(f"Received root endpoint from {origin}")
     return {
         "service": "Qingping Webhook - Validator & MQTT Gateway Service",
-        "version": "1.0.0",
-        "revision": "$Rev: 4614 $",
+        "version": "1.0.1",
+        "revision": "$Rev: 4616 $",
         "endpoints": {
             "health": "/health",
             "metrics": "/metrics",

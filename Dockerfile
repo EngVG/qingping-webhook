@@ -3,23 +3,27 @@ FROM python:3.12-slim
 # Metadata
 LABEL maintainer="Engineering von Gunten"
 LABEL description="Qingping Webhook Validator & MQTT Gateway Service"
-LABEL version="1.0.0"
+LABEL version="1.0.1"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Multi-stage build for even smaller images (optional)
-FROM python:3.12-slim as builder
+# Multi-stage build for even smaller images
+FROM python:3.12-slim AS builder
 WORKDIR /app
 COPY app/requirements.txt ./
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 FROM python:3.12-slim
 WORKDIR /app
+
+# Copy installed packages from builder
 COPY --from=builder /root/.local /root/.local
 ENV PATH=/root/.local/bin:$PATH
+
+# Copy application code
 COPY app/ ./
 
 # Add a non-root user with specific UID and GID
@@ -27,7 +31,8 @@ ARG USERNAME=qingping
 ARG USER_UID=1000
 ARG USER_GID=1000
 RUN addgroup --gid $USER_GID $USERNAME && \
-    adduser --disabled-password --gecos "" --uid $USER_UID --gid $USER_GID $USERNAME
+    adduser --disabled-password --gecos "" --uid $USER_UID --gid $USER_GID $USERNAME && \
+    chown -R $USERNAME:$USERNAME /app
 
 # Switch to the new user
 USER $USERNAME
