@@ -19,22 +19,21 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 FROM python:3.12-slim
 WORKDIR /app
 
-# Copy installed packages from builder
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
-
-# Copy application code
-COPY app/ ./
-
 # Add a non-root user with specific UID and GID
 ARG USERNAME=qingping
 ARG USER_UID=1000
 ARG USER_GID=1000
 RUN addgroup --gid $USER_GID $USERNAME && \
-    adduser --disabled-password --gecos "" --uid $USER_UID --gid $USER_GID $USERNAME && \
-    chown -R $USERNAME:$USERNAME /app
+    adduser --disabled-password --gecos "" --uid $USER_UID --gid $USER_GID $USERNAME
 
-# Switch to the new user
+# Copy installed packages from builder and set ownership
+COPY --from=builder --chown=$USERNAME:$USERNAME /root/.local /home/$USERNAME/.local
+ENV PATH=/home/$USERNAME/.local/bin:$PATH
+
+# Copy application code and set ownership
+COPY --chown=$USERNAME:$USERNAME app/ ./
+
+# Switch to the non-root user
 USER $USERNAME
 
 # Expose port
