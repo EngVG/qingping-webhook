@@ -1,21 +1,25 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
+
+# Metadata
+LABEL maintainer="Engineering von Gunten"
+LABEL description="Qingping Webhook Validator & MQTT Gateway Service"
+LABEL version="1.0.0"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install dependencies
+# Multi-stage build for even smaller images (optional)
+FROM python:3.12-slim as builder
+WORKDIR /app
 COPY app/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Cleanup
-RUN apt-get update && \
-    apt-get autoremove --purge -y && \
-    apt-get autoclean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Copy application
+FROM python:3.12-slim
+WORKDIR /app
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
 COPY app/ ./
 
 # Add a non-root user with specific UID and GID
@@ -31,7 +35,7 @@ USER $USERNAME
 # Expose port
 EXPOSE 8000
 
-# Health check
+# Health check - uses the /health endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD python -c "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=2).getcode() == 200 else 1)"
 

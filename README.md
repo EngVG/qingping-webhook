@@ -115,8 +115,8 @@ Published messages use device-specific topics:
 | `USER_UID`                    | `1001`              | **(Docker only)** Linux user ID for the application process                 |
 | `USER_GID`                    | `1001`              | **(Docker only)** Linux group ID for the application process                |
 
-> **Note:**  
-> `USER_UID` and `USER_GID` are used when running the container as a non-root user.  
+> **Note:**
+> `USER_UID` and `USER_GID` are used when running the container as a non-root user.
 > Set these to match your host user's UID/GID if you need to manage file permissions or integrate with host-mounted volumes.
 
 ## Security Features

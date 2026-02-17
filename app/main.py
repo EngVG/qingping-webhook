@@ -6,7 +6,7 @@
 #        Qingping → Webhook Service → MQTT → Telegraf → InfluxDB
 #
 # author: martin von gunten
-# $Id: main.py 4608 2026-02-16 06:25:35Z m.vgunten $
+# $Id: main.py 4614 2026-02-17 08:22:43Z m.vgunten $
 #
 # (c) 2026 by engineering von gunten / all rights reserved
 
@@ -159,22 +159,33 @@ class MQTTPublisher:
         self.client.loop_stop()
         self.client.disconnect()
 
-    def publish(self, topic: str, payload: Dict[str, Any]) -> bool:
-        """Publish validated payload to MQTT."""
-        if not self.is_connected():
-            self.logger.error("MQTT client not connected")
-            return False
-        try:
-            result = self.client.publish(topic, json.dumps(payload), qos=1, retain=False)
-            if result.rc == mqtt_client.MQTT_ERR_SUCCESS:
-                self.logger.info(f"Published to MQTT: {topic}")
-                return True
-            else:
-                self.logger.error(f"MQTT publish failed with code: {result.rc}")
-                return False
-        except Exception as e:
-            self.logger.error(f"Failed to publish to MQTT: {e}")
-            return False
+    def publish(self, topic: str, payload: Dict[str, Any], retries: int = 3) -> bool:
+        """
+        Publish validated payload to MQTT.
+
+        Args:
+            topic: The MQTT topic to publish to
+            payload: The payload to publish (will be JSON-encoded)
+            retries: Number of retry attempts in case of failure
+
+        Returns:
+            True if publishing was successful, False otherwise
+        """
+        for attempt in range(retries):
+            try:
+                if not self.is_connected() and not self.connect():
+                    continue
+                result = self.client.publish(topic, json.dumps(payload), qos=1, retain=False)
+                if result.rc == mqtt_client.MQTT_ERR_SUCCESS:
+                    self.logger.info(f"Published to MQTT: {topic}")
+                    return True
+                else:
+                    self.logger.error(f"MQTT publish failed with code: {result.rc}")
+                    return False
+            except Exception as e:
+                self.logger.warning(f"Publish attempt {attempt+1} failed: {e}")
+        self.logger.error(f"Publish to MQTT: {topic} failed")
+        return False
 
     def is_connected(self) -> bool:
         """Check if MQTT client is connected"""
@@ -404,7 +415,7 @@ async def root(request: Request):
     return {
         "service": "Qingping Webhook - Validator & MQTT Gateway Service",
         "version": "1.0.0",
-        "revision": "$Rev: 4608 $",
+        "revision": "$Rev: 4614 $",
         "endpoints": {
             "health": "/health",
             "metrics": "/metrics",
